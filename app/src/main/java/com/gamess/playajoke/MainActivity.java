@@ -2,34 +2,156 @@ package com.gamess.playajoke;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Base64;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.gamess.playajoke.utils.AESUtils;
 import com.gamess.playajoke.utils.BigDataTools;
+import com.gamess.playajoke.utils.PointShowView;
 import com.gamess.playajoke.utils.RSAUtils;
 
 import java.security.KeyPair;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private TextView tv1, tv2, tv3, tv4, tv5, tv6;
+    private PointShowView pointShowView;
+    private EditText count;
+    private TextView countAllTv;
+    private List<Float> xs = new ArrayList<>();
+    private List<Float> ys = new ArrayList<>();
+    private float maxX, maxY;
+    private List<Boolean> dirXs = new ArrayList<>(); //true正
+    private List<Boolean> dirYs = new ArrayList<>(); //true正
+    private List<Integer> speedXs = new ArrayList<>();
+    private List<Integer> speedYs = new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        tv1 = findViewById(R.id.tv1);
-        tv2 = findViewById(R.id.tv2);
-        tv3 = findViewById(R.id.tv3);
+//        setContentView(R.layout.activity_main);
+        setContentView(R.layout.test_layout);
+        pointShowView = findViewById(R.id.point_view);
+        count = findViewById(R.id.count);
+        countAllTv = findViewById(R.id.countall_tv);
+//        tv1 = findViewById(R.id.tv1);
+//        tv2 = findViewById(R.id.tv2);
+//        tv3 = findViewById(R.id.tv3);
 //        tv4 = findViewById(R.id.tv4);
 //        tv5 = findViewById(R.id.tv5);
 //        tv6 = findViewById(R.id.tv6);
 
-        //test();
-        //test2();
-        test3();
+        //大数值计算
+//        test();
+        //RSA加密
+//        test2();
+        //AES加密
+//        test3();
 
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+
+        //换了test布局，使用PointShowView
+        test4();
+    }
+
+    private void init4() {
+        addPoint(1);
+
+        pointShowView.setInit(xs, ys);
+
+        pointShowView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    int c = Integer.parseInt(count.getText().toString().trim());
+                    addPoint(c);
+                }catch (Exception e){
+
+                }
+            }
+        });
+    }
+
+    private void addPoint(int countI) {
+        countAllTv.setText(Integer.parseInt(countAllTv.getText().toString().trim())+countI+"");
+        Random random = new Random();
+        for (int i = 0; i < countI; i++) {
+            xs.add(random.nextInt((int) maxX) + 0f);
+            ys.add(random.nextInt((int) maxY) + 0f);
+            dirXs.add(true);
+            dirYs.add(true);
+            speedXs.add(random.nextInt(20));
+            speedYs.add(random.nextInt(20));
+        }
+    }
+
+
+    private void test4() {
+        //获取density
+        WindowManager wm = (WindowManager) this.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        maxX = dm.density * 200;         // 屏幕宽度（像素）
+        maxY = dm.density * 500;       // 屏幕高度（像素）
+        //初始化小球弹View信息
+        init4();
+        //开启线程让小球跑动
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    SystemClock.sleep(50);
+                    setPoint();
+                    pointShowView.show();
+                }
+            }
+        }).start();
+    }
+
+    private void setPoint() {
+        for (int i = 0; i < xs.size(); i++) {
+            if (dirXs.get(i)) {
+                xs.set(i, xs.get(i) + speedXs.get(i));
+                pointShowView.setXX(xs.get(i), i);
+            } else {
+                xs.set(i, xs.get(i) - speedXs.get(i));
+                pointShowView.setXX(xs.get(i), i);
+            }
+            if (dirYs.get(i)) {
+                ys.set(i, ys.get(i) + speedYs.get(i));
+                pointShowView.setYY(ys.get(i), i);
+            } else {
+                ys.set(i, ys.get(i) - speedYs.get(i));
+                pointShowView.setYY(ys.get(i), i);
+            }
+            if (xs.get(i) >= maxX) {
+                dirXs.set(i, false);
+            }
+            if (xs.get(i) <= i) {
+                dirXs.set(i, true);
+            }
+            if (ys.get(i) >= maxY) {
+                dirYs.set(i, false);
+            }
+            if (ys.get(i) <= i) {
+                dirYs.set(i, true);
+            }
+        }
     }
 
     private void test3() {
